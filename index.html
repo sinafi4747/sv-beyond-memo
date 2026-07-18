@@ -223,19 +223,24 @@
         portal: { main: "#3498db", bg: "#eaf2f8" }
     };
 
-    let appData = {
-        myDeck: "",
-        myDeckImage: "",
-        classes: {
-            elf: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
-            royal: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
-            witch: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
-            dragon: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
-            nightmare: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
-            bishop: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
-            portal: { "USHIO": { matchup: "", mulligan: "", keycards: "", strategy: "" }, "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } }
-        }
-    };
+    // 初期データの雛形
+    function getBlankData() {
+        return {
+            myDeck: "",
+            myDeckImage: "",
+            classes: {
+                elf: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
+                royal: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
+                witch: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
+                dragon: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
+                nightmare: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
+                bishop: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
+                portal: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } }
+            }
+        };
+    }
+
+    let appData = getBlankData();
 
     function init() {
         const params = new URLSearchParams(window.location.search);
@@ -244,39 +249,36 @@
         if (dataParam) {
             try {
                 const decodedData = JSON.parse(decodeURIComponent(escape(atob(dataParam))));
-                appData = { ...appData, ...decodedData };
-                if(confirm("共有されたデータを読み込みました！ブラウザに自動保存（上書き）しますか？")) {
-                    saveToLocalStorage();
-                }
+                appData = decodedData;
             } catch (e) {
-                console.error("URLデータの復元に失敗しました", e);
+                console.error("URLデコード失敗、初期データを使用します", e);
+                appData = getBlankData();
             }
         } else {
-            const localData = localStorage.getItem("sv_beyond_ultimate_memo");
-            if (localData) {
-                try { appData = JSON.parse(localData); } catch(e) {}
+            try {
+                const localData = localStorage.getItem("sv_beyond_ultimate_memo");
+                if (localData) {
+                    appData = JSON.parse(localData);
+                } else {
+                    appData = getBlankData();
+                }
+            } catch(e) {
+                console.error("ローカルストレージ読込失敗、リセットします", e);
+                appData = getBlankData();
             }
         }
 
-        // クラス構造の安全チェック（破壊対策）
+        // データ構造の完全修復（フリーズ防止安全ガード）
+        if (!appData || typeof appData !== 'object') appData = getBlankData();
+        if (!appData.classes) appData.classes = getBlankData().classes;
+        
         const baseClasses = ["elf", "royal", "witch", "dragon", "nightmare", "bishop", "portal"];
-        if (!appData.classes) appData.classes = {};
         baseClasses.forEach(c => {
-            if (!appData.classes[c]) appData.classes[c] = {};
+            if (!appData.classes[c] || typeof appData.classes[c] !== 'object') {
+                appData.classes[c] = { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } };
+            }
             if (!appData.classes[c]["共通メモ"]) {
                 appData.classes[c]["共通メモ"] = { matchup: "", mulligan: "", keycards: "", strategy: "" };
             }
         });
-
-        document.getElementById("myDeck").value = appData.myDeck || "";
-        if (appData.myDeckImage) {
-            const img = document.getElementById("deckPreview");
-            img.src = appData.myDeckImage;
-            img.style.display = "block";
-        }
-
-        currentClass = document.getElementById("targetClass").value;
-        updateClassTheme();
-        
-        // 最初のアーキタイプを安全に設定
 
