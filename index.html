@@ -233,7 +233,7 @@
             dragon: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
             nightmare: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
             bishop: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
-            portal: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } }
+            portal: { "USHIO": { matchup: "", mulligan: "", keycards: "", strategy: "" }, "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } }
         }
     };
 
@@ -258,6 +258,16 @@
             }
         }
 
+        // クラス構造の安全チェック（破壊対策）
+        const baseClasses = ["elf", "royal", "witch", "dragon", "nightmare", "bishop", "portal"];
+        if (!appData.classes) appData.classes = {};
+        baseClasses.forEach(c => {
+            if (!appData.classes[c]) appData.classes[c] = {};
+            if (!appData.classes[c]["共通メモ"]) {
+                appData.classes[c]["共通メモ"] = { matchup: "", mulligan: "", keycards: "", strategy: "" };
+            }
+        });
+
         document.getElementById("myDeck").value = appData.myDeck || "";
         if (appData.myDeckImage) {
             const img = document.getElementById("deckPreview");
@@ -267,19 +277,6 @@
 
         currentClass = document.getElementById("targetClass").value;
         updateClassTheme();
-        updateArchetypeSelect();
         
-        const archetypes = Object.keys(appData.classes[currentClass]);
-        currentArchetype = archetypes.includes(currentArchetype) ? currentArchetype : archetypes[0];
-        document.getElementById("targetArchetype").value = currentArchetype;
+        // 最初のアーキタイプを安全に設定
 
-        loadCurrentData();
-    }
-
-    function saveToLocalStorage() {
-        localStorage.setItem("sv_beyond_ultimate_memo", JSON.stringify(appData));
-    }
-
-    function saveCurrentData() {
-        appData.myDeck = document.getElementById("myDeck").value;
-        
