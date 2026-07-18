@@ -269,7 +269,6 @@
         updateClassTheme();
         updateArchetypeSelect();
         
-        // 読み込まれたデータの中に今のアークタイプが存在するかチェック
         const archetypes = Object.keys(appData.classes[currentClass]);
         currentArchetype = archetypes.includes(currentArchetype) ? currentArchetype : archetypes[0];
         document.getElementById("targetArchetype").value = currentArchetype;
@@ -283,4 +282,6 @@
 
     function saveCurrentData() {
         appData.myDeck = document.getElementById("myDeck").value;
+        
+
         
