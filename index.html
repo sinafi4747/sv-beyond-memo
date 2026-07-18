@@ -137,7 +137,7 @@
 <body>
 
 <div class="container">
-    <h1>シャドバビヨンド 对面メモ</h1>
+    <h1>シャドバビヨンド 対面メモ</h1>
     
     <div class="form-group">
         <label for="myDeck">自分のデッキ名</label>
@@ -268,6 +268,12 @@
         currentClass = document.getElementById("targetClass").value;
         updateClassTheme();
         updateArchetypeSelect();
+        
+        // 読み込まれたデータの中に今のアークタイプが存在するかチェック
+        const archetypes = Object.keys(appData.classes[currentClass]);
+        currentArchetype = archetypes.includes(currentArchetype) ? currentArchetype : archetypes[0];
+        document.getElementById("targetArchetype").value = currentArchetype;
+
         loadCurrentData();
     }
 
@@ -278,8 +284,3 @@
     function saveCurrentData() {
         appData.myDeck = document.getElementById("myDeck").value;
         
-        if (!appData.classes[currentClass][currentArchetype]) {
-            appData.classes[currentClass][currentArchetype] = { matchup: "", mulligan: "", keycards: "", strategy: "" };
-        }
-        
-        appData.classes[currentClass][currentArchetype].mulligan = document.getElementById("mulligan").value;
