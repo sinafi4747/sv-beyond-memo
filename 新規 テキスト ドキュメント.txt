@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シャドバビヨンド 対面メモ＆共有ツール Ultimate</title>
+    <style>
+        :root {
+            --primary-color: #1a252f;
+            --accent-color: #3498db;
+            --bg-color: #f1f2f6;
+            --card-bg: white;
+            --success-color: #2ecc71;
+            --warning-color: #f1c40f;
+            --danger-color: #e74c3c;
+            --class-color: #2ecc71;
+            --class-color-alpha: rgba(46, 204, 113, 0.1);
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 10px;
+            color: #333;
+            transition: background-color 0.3s;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-top: 6px solid var(--class-color);
+            transition: border-color 0.3s;
+        }
+        h1 {
+            font-size: 1.2rem;
+            text-align: center;
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+        select, input, textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+            background-color: #fff;
+        }
+        textarea {
+            resize: vertical;
+            height: 90px;
+        }
+        .flex-row {
+            display: flex;
+            gap: 8px;
+        }
+        .flex-row select {
+            flex: 1;
+        }
+        .btn-small {
+            background-color: #7f8c8d;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-weight: bold;
+        }
+        .btn-delete {
+            background-color: var(--danger-color);
+        }
+        .matchup-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .matchup-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ccc;
+            background: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .matchup-btn.win { border-color: var(--success-color); color: var(--success-color); }
+        .matchup-btn.win.active { background: var(--success-color); color: white; }
+        .matchup-btn.even { border-color: var(--warning-color); color: #d4a300; }
+        .matchup-btn.even.active { background: var(--warning-color); color: white; }
+        .matchup-btn.lose { border-color: var(--danger-color); color: var(--danger-color); }
+        .matchup-btn.lose.active { background: var(--danger-color); color: white; }
+
+        .deck-preview {
+            margin-top: 8px;
+            max-width: 100%;
+            border-radius: 6px;
+            border: 2px dashed #ccc;
+            display: none;
+        }
+        .btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn:hover { opacity: 0.9; }
+        .share-area {
+            margin-top: 15px;
+            padding: 10px;
+            background: #eef7fc;
+            border-radius: 6px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>シャドバビヨンド 对面メモ</h1>
+    
+    <div class="form-group">
+        <label for="myDeck">自分のデッキ名</label>
+        <input type="text" id="myDeck" placeholder="例: アグロエルフ">
+    </div>
+
+    <div class="form-group">
+        <label for="deckImageInput">自分のデッキ画像（スクショ等）</label>
+        <input type="file" id="deckImageInput" accept="image/*" onchange="uploadDeckImage()">
+        <img id="deckPreview" class="deck-preview" alt="デッキレシピ">
+    </div>
+
+    <hr style="border: 0; border-top: 2px solid var(--class-color-alpha); margin: 20px 0;">
+
+    <div class="form-group">
+        <label for="targetClass">相手のクラス</label>
+        <select id="targetClass" onchange="changeClass()">
+            <option value="elf">エルフ</option>
+            <option value="royal">ロイヤル</option>
+            <option value="witch">ウィッチ</option>
+            <option value="dragon">ドラゴン</option>
+            <option value="nightmare">ナイトメア</option>
+            <option value="bishop">ビショップ</option>
+            <option value="portal">ネメシス</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="targetArchetype">相手のデッキタイプ</label>
+        <div class="flex-row">
+            <select id="targetArchetype" onchange="changeArchetype()"></select>
+            <button class="btn-small btn-delete" id="deleteArchetypeBtn" onclick="deleteArchetype()">削除</button>
+        </div>
+        <div class="flex-row" style="margin-top: 6px;">
+            <input type="text" id="newArchetypeInput" placeholder="新デッキ名（例: コントロール）">
+            <button class="btn-small" onclick="addArchetype()">デッキ追加</button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>相性（有利度）</label>
+        <div class="matchup-buttons">
+            <button class="matchup-btn win" id="btn-win" onclick="setMatchup('win')">有利</button>
+            <button class="matchup-btn even" id="btn-even" onclick="setMatchup('even')">五分</button>
+            <button class="matchup-btn lose" id="btn-lose" onclick="setMatchup('lose')">不利</button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label id="mulliganLabel">マリガン方針</label>
+        <textarea id="mulligan" placeholder="キープ基準や先後での違いなど"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label id="keycardsLabel">要注意・キーカード</label>
+        <textarea id="keycards" placeholder="警戒すべき相手のコンボ、超進化フォロワーなど"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label id="strategyLabel">立ち回り・ゲームプラン</label>
+        <textarea id="strategy" placeholder="理想のリーサルターンや、面の押し引きなど"></textarea>
+    </div>
+
+    <button class="btn" onclick="generateShareUrl()">共有用URLを発行・コピーする</button>
+
+    <div class="share-area" id="shareArea" style="display: none;">
+        <p style="font-size: 0.8rem; margin: 0 0 5px 0; color: #555;">URLをコピーしました！SNSやチームに共有できます：</p>
+        <input type="text" id="shareUrl" readonly onclick="this.select()">
+    </div>
+</div>
+
+<script>
+    let currentClass = "elf";
+    let currentArchetype = "共通メモ";
+
+    const classColors = {
+        elf: { main: "#2ecc71", bg: "#e8f8f0" },
+        royal: { main: "#f1c40f", bg: "#fef9e7" },
+        witch: { main: "#9b59b6", bg: "#f4ecf7" },
+        dragon: { main: "#e67e22", bg: "#fdf2e9" },
+        nightmare: { main: "#34495e", bg: "#ebedef" },
+        bishop: { main: "#1abc9c", bg: "#e8f8f5" },
+        portal: { main: "#3498db", bg: "#eaf2f8" }
+    };
+
+    let appData = {
+        myDeck: "",
+        myDeckImage: "",
+        classes: {
+            elf: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
+            royal: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
+            witch: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
+            dragon: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
+            nightmare: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
+            bishop: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } },
+            portal: { "共通メモ": { matchup: "", mulligan: "", keycards: "", strategy: "" } }
+        }
+    };
+
+    function init() {
+        const params = new URLSearchParams(window.location.search);
+        const dataParam = params.get("d");
+        
+        if (dataParam) {
+            try {
+                const decodedData = JSON.parse(decodeURIComponent(escape(atob(dataParam))));
+                appData = { ...appData, ...decodedData };
+                if(confirm("共有されたデータを読み込みました！ブラウザに自動保存（上書き）しますか？")) {
+                    saveToLocalStorage();
+                }
+            } catch (e) {
+                console.error("URLデータの復元に失敗しました", e);
+            }
+        } else {
+            const localData = localStorage.getItem("sv_beyond_ultimate_memo");
+            if (localData) {
+                try { appData = JSON.parse(localData); } catch(e) {}
+            }
+        }
+
+        document.getElementById("myDeck").value = appData.myDeck || "";
+        if (appData.myDeckImage) {
+            const img = document.getElementById("deckPreview");
+            img.src = appData.myDeckImage;
+            img.style.display = "block";
+        }
+
+        currentClass = document.getElementById("targetClass").value;
+        updateClassTheme();
+        updateArchetypeSelect();
+        loadCurrentData();
+    }
+
+    function saveToLocalStorage() {
+        localStorage.setItem("sv_beyond_ultimate_memo", JSON.stringify(appData));
+    }
+
+    function saveCurrentData() {
+        appData.myDeck = document.getElementById("myDeck").value;
+        
+        if (!appData.classes[currentClass][currentArchetype]) {
+            appData.classes[currentClass][currentArchetype] = { matchup: "", mulligan: "", keycards: "", strategy: "" };
+        }
+        
+        appData.classes[currentClass][currentArchetype].mulligan = document.getElementById("mulligan").value;
